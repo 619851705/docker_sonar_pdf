@@ -1,0 +1,29 @@
+db:
+  image: kiasaki/alpine-postgres:9.5
+  container_name: sonarqube-db
+  environment:
+    - POSTGRES_USER=sonar
+    - POSTGRES_PASSWORD=sonar
+    - POSTGRES_DB=sonar
+  ports:
+    - "5432:5432"
+sonarqube:
+  build: sonarphp
+  container_name: sonarqube-web
+  links:
+    - db
+  environment:
+    - DB_USER=sonar
+    - DB_PASS=sonar
+    - DB_NAME=sonar
+  ports:
+    - "9000:9000"
+    - "9002:9002"
+sonarqube_runner:
+  build: ./sonar-runner
+  command: dockerize -wait http://sonarqube-web:9000/api/server/version -timeout 240s sonar-runner
+  volumes:
+    - ./code:/data
+  links:
+    - sonarqube
+    - db
